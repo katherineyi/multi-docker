@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t katherine/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+    - docker run -e CI=true katherine/react-test npm test
+
+after_success:
+    - docker build -t katherine/multi-client ./client
+    - docker build -t katherine/multi-nginx ./nginx
+    - docker build -t katherine/multi-server ./server
+    - docker build -t katherine/multi-worker ./worker
+    # Log into the docker cli
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to Docker hub
+    - docker push katherine/multi-client
+    - docker push katherine/multi-nginx
+    - docker push katherine/multi-server
+    - docker push katherine/multi-worker
